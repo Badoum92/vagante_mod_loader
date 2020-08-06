@@ -1,0 +1,10 @@
+[package]
+name = "vagante_mod_loader"
+version = "0.1.0"
+authors = ["Loïc Bellonnet-Mottet <loic.bellonnet-mottet@epita.fr>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+flate2 = "1.0.16"
