@@ -121,16 +121,18 @@ fn repack(path: &Path) -> Result<(), io::Error> {
     Ok(())
 }
 
-fn get_mods() -> Option<Vec<PathBuf>> {
+fn get_mods() -> Vec<PathBuf> {
     let mods_dir = Path::new("mods");
     if !mods_dir.is_dir() {
-        return None;
+        println!("No mods directory found, exiting.");
+        std::process::exit(1);
     }
 
     let entries = fs::read_dir(mods_dir);
 
     if entries.is_err() {
-        return None;
+        println!("Could no read mods, exiting.");
+        std::process::exit(1);
     }
 
     let mut mods = Vec::new();
@@ -144,47 +146,23 @@ fn get_mods() -> Option<Vec<PathBuf>> {
         }
     }
 
-    return Some(mods);
-}
-
-fn load_mod(dir: &Path) -> io::Result<()> {
-    for entry in fs::read_dir(dir)? {
-        let entry = entry?;
-        let path = entry.path();
-        if path.is_dir() {
-            load_mod(&path)?;
-        } else {
-            let mut ancestors = dir.ancestors();
-            while ancestors.count() != 3 {
-                ancestors.next();
-            }
-            let file_path = path.strip_prefix(ancestors.next().unwrap()).unwrap();
-            let parent = file_path.parent();
-            let data_path = Path::new("_data");
-            if parent.is_some() {
-                fs::create_dir_all(data_path.join(parent.unwrap()))?;
-            }
-            fs::copy(&path, data_path.join(file_path))?;
-        }
-    }
-    Ok(())
-}
-
-fn load_mods(arg: &Path) -> Result<(), io::Error> {
-    let mods = get_mods().unwrap_or_default();
     if mods.is_empty() {
         println!("No mods found, exiting.");
-        return Err(io::Error::new(io::ErrorKind::InvalidInput, "no mods found"));
+        std::process::exit(1);
     }
 
+    return mods;
+}
+
+fn load_mods_prompt(mods: &Vec<PathBuf>) {
     println!("Mods to load (will be loaded in alphabetical order, rename them if you want to change the order):\n");
     let mut i = 1;
-    for m in &mods {
+    for m in mods {
         println!("{}. {}", i, m.to_str().unwrap());
         i += 1;
     }
     print!("\nLoad mods? [Y,n] ");
-    io::stdout().flush()?;
+    io::stdout().flush().unwrap();
 
     loop {
         let mut input = String::new();
@@ -195,20 +173,18 @@ fn load_mods(arg: &Path) -> Result<(), io::Error> {
         if trimmed_input == "" || trimmed_input == "y" {
             break;
         } else if trimmed_input == "n" {
-            return Ok(());
+            std::process::exit(1);
         } else {
             print!("(Invalid input: {}) Load mods? [Y,n] ", trimmed_input);
-            io::stdout().flush()?;
+            io::stdout().flush().unwrap();
         }
     }
+}
 
-    println!("- - - - - - - - - - - - - - - - - - - -");
-    unpack(&arg)?;
-
-    println!("- - - - - - - - - - - - - - - - - - - -");
+fn load_mods(mods: &Vec<PathBuf>) {
     for dir in mods {
         print!(
-            "Loading mod: {}: ",
+            "Loading mod: {}... ",
             dir.file_name().unwrap().to_str().unwrap()
         );
         io::stdout().flush().unwrap();
@@ -218,6 +194,33 @@ fn load_mods(arg: &Path) -> Result<(), io::Error> {
             Err(_) => println!("Error"),
         }
     }
+}
+
+fn load_mod(dir: &Path) -> io::Result<()> {
+    for entry in fs::read_dir(dir)? {
+        let entry = entry?;
+        let mod_file_path = entry.path();
+        if mod_file_path.is_dir() {
+            load_mod(&mod_file_path)?;
+        } else {
+            let data_file_path =
+                Path::new("_data").join(mod_file_path.into_iter().skip(2).collect::<PathBuf>());
+            fs::create_dir_all(data_file_path.parent().unwrap())?;
+            fs::copy(&mod_file_path, data_file_path)?;
+        }
+    }
+    Ok(())
+}
+
+fn mod_loader(arg: &Path) -> io::Result<()> {
+    let mods = get_mods();
+    load_mods_prompt(&mods);
+
+    println!("- - - - - - - - - - - - - - - - - - - -");
+    unpack(&arg)?;
+
+    println!("- - - - - - - - - - - - - - - - - - - -");
+    load_mods(&mods);
 
     println!("- - - - - - - - - - - - - - - - - - - -");
     repack(Path::new("_data"))?;
@@ -235,7 +238,33 @@ fn print_menu() {
     println!("5. Exit");
 }
 
-fn main() -> Result<(), io::Error> {
+fn dispatch(arg: Option<String>, callback: fn(&Path) -> io::Result<()>) -> io::Result<()> {
+    if arg.is_none() {
+        return Err(io::Error::new(io::ErrorKind::InvalidInput, "not argument"));
+    }
+    println!("- - - - - - - - - - - - - - - - - - - -");
+    callback(Path::new(&arg.unwrap()))
+}
+
+fn print_help() {
+    println!("\n");
+    println!("To load mods place your mod directories into a directory called `mods`.");
+    println!("Make sure to order them alphabetically in the order you want them to be loaded.");
+    println!("Then drag and drop a valid `data.vra` file on this program.");
+    println!("A new data.vra file will be generated. You can simply put it in your vagante install directory.");
+
+    println!("\n");
+    println!("To unpack a `data.vra` file drag and drop a valid `data.vra` file on this program");
+    println!("A new `_data` directory containing the unpacked data will be generated.");
+
+    println!("\n");
+    println!("To repack a `data.vra` file drag and drop a directory (unpacked by this program) on this program");
+    println!("A new `new_data.vra` file will be generated.");
+
+    println!("\n");
+}
+
+fn main() -> io::Result<()> {
     let arg = std::env::args().nth(1);
 
     print_menu();
@@ -249,12 +278,7 @@ fn main() -> Result<(), io::Error> {
 
         match n {
             1 => {
-                if arg.is_none() {
-                    println!("No data.vra file provided, exiting.");
-                    std::process::exit(1);
-                }
-                println!("- - - - - - - - - - - - - - - - - - - -");
-                match load_mods(Path::new(&arg.unwrap())) {
+                match dispatch(arg, mod_loader) {
                     Ok(_) => {}
                     Err(e) => {
                         println!("Could not load mods: {}", e);
@@ -263,12 +287,7 @@ fn main() -> Result<(), io::Error> {
                 break;
             }
             2 => {
-                if arg.is_none() {
-                    println!("No data.vra file provided, exiting.");
-                    std::process::exit(1);
-                }
-                println!("- - - - - - - - - - - - - - - - - - - -");
-                match unpack(Path::new(&arg.unwrap())) {
+                match dispatch(arg, unpack) {
                     Ok(_) => {}
                     Err(e) => {
                         println!("Could not unpack: {}", e);
@@ -277,12 +296,7 @@ fn main() -> Result<(), io::Error> {
                 break;
             }
             3 => {
-                if arg.is_none() {
-                    println!("No unpacked directory provided, exiting.");
-                    std::process::exit(1);
-                }
-                println!("- - - - - - - - - - - - - - - - - - - -");
-                match repack(Path::new(&arg.unwrap())) {
+                match dispatch(arg, repack) {
                     Ok(_) => {}
                     Err(e) => {
                         println!("Could not repack: {}", e);
@@ -291,21 +305,7 @@ fn main() -> Result<(), io::Error> {
                 break;
             }
             4 => {
-                println!("\n");
-                println!("To load mods place your mod directories into a directory called `mods`.");
-                println!("Make sure to order them alphabetically in the order you want them to be loaded.");
-                println!("Then drag and drop a valid `data.vra` file on this program.");
-                println!("A new data.vra file will be generated. You can simply put it in your vagante install directory.");
-
-                println!("\n");
-                println!("To unpack a `data.vra` file drag and drop a valid `data.vra` file on this program");
-                println!("A new `_data` directory containing the unpacked data will be generated.");
-
-                println!("\n");
-                println!("To repack a `data.vra` file drag and drop a directory (unpacked by this program) on this program");
-                println!("A new `new_data.vra` file will be generated.");
-
-                println!("\n");
+                print_help();
                 print_menu();
                 print!("Selection: ");
                 io::stdout().flush()?;
