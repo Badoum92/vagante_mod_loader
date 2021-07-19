@@ -1,4 +1,4 @@
-#include <libdeflate_win32/libdeflate.h>
+#include <libdeflate/libdeflate.h>
 #include <iostream>
 #include <string>
 #include <fstream>

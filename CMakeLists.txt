@@ -1,9 +1,11 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.4)
 
 project(test)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -Wall -Wextra -O3")
+
+add_subdirectory(third_party)
 
 add_executable(main
     src/main.cc
@@ -19,7 +21,5 @@ target_link_directories(main
 )
 
 target_link_libraries(main
-    libdeflatestatic
+    libdeflate
 )
-
-# add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
