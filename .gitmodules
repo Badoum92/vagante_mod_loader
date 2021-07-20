@@ -1,3 +1,16 @@
 [submodule "third_party/libdeflate"]
 	path = third_party/libdeflate
 	url = https://github.com/ebiggers/libdeflate
+[submodule "third_party/glad"]
+	path = third_party/glad
+	url = https://github.com/Dav1dde/glad
+	branch = c
+[submodule "third_party/glfw"]
+	path = third_party/glfw
+	url = https://github.com/glfw/glfw
+[submodule "third_party/stb"]
+	path = third_party/stb
+	url = https://github.com/nothings/stb
+[submodule "third_party/imgui"]
+	path = third_party/imgui
+	url = https://github.com/ocornut/imgui
