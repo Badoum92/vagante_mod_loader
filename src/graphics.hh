@@ -16,6 +16,19 @@ void destroy_window(GLFWwindow* window);
 void update_window(GLFWwindow* window);
 bool should_close(GLFWwindow* window);
 void init_imgui(GLFWwindow* window);
-void render();
-GLuint load_texture(const std::string& path);
-void destroy_texture(GLuint texture);
+
+struct Texture
+{
+    GLuint handle = 0;
+    ImVec2 size{0, 0};
+};
+
+Texture load_texture(const std::string& path);
+void destroy_texture(Texture& texture);
+
+struct RenderData
+{
+    Texture texture;
+};
+
+void render(const RenderData& render_data);

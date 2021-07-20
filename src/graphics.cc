@@ -61,7 +61,36 @@ void init_imgui(GLFWwindow* window)
     ImGui_ImplOpenGL3_Init("#version 450 core");
 }
 
-void render()
+Texture load_texture(const std::string& path)
+{
+    int width, height, channels;
+    unsigned char* data = stbi_load(path.c_str(), &width, &height, &channels, 4);
+
+    if (data == nullptr)
+    {
+        throw std::runtime_error("Could not load image " + path);
+    }
+
+    Texture texture = {};
+    texture.size.x = width;
+    texture.size.y = height;
+
+    glCreateTextures(GL_TEXTURE_2D, 1, &texture.handle);
+    glTextureStorage2D(texture.handle, 1, GL_RGBA8, width, height);
+    // glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTextureSubImage2D(texture.handle, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+    return texture;
+}
+
+void destroy_texture(Texture& texture)
+{
+    glDeleteTextures(1, &texture.handle);
+    texture.handle = 0;
+    texture.size = {0, 0};
+}
+
+void render(const RenderData& render_data)
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -69,23 +98,11 @@ void render()
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    ImGui::ShowDemoWindow();
+    ImGui::Begin("Test");
+    ImGui::Image((void*)&render_data.texture.handle, render_data.texture.size);
+    ImGui::End();
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     ImGui::EndFrame();
-}
-
-GLuint load_image(const std::string& path)
-{
-    int width, height, channels;
-    unsigned char* data = stbi_load(path.c_str(), &width, &height, &channels, 4);
-
-    GLuint texture;
-    glCreateTextures(GL_TEXTURE_2D, 1, &texture);
-    glTextureStorage2D(texture, 1, GL_RGBA8, width, height);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-    glTextureSubImage2D(texture, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    return texture;
 }
