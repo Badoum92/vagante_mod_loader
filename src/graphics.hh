@@ -3,13 +3,14 @@
 #include <string>
 
 #include <GLFW/glfw3.h>
-#include <glad/glad.h>
-#include <imgui/imgui.h>
-#include <imgui/backends/imgui_impl_opengl3.h>
-#include <imgui/backends/imgui_impl_glfw.h>
 
-constexpr int WINDOW_WIDTH = 1280;
-constexpr int WINDOW_HEIGHT = 720;
+#include "types.hh"
+
+constexpr float WINDOW_SCALE = 3.0f;
+constexpr int WINDOW_WIDTH = 288 * WINDOW_SCALE;
+constexpr int WINDOW_HEIGHT = 272 * WINDOW_SCALE;
+
+extern GLFWwindow* g_window;
 
 GLFWwindow* create_window();
 void destroy_window(GLFWwindow* window);
@@ -17,18 +18,7 @@ void update_window(GLFWwindow* window);
 bool should_close(GLFWwindow* window);
 void init_imgui(GLFWwindow* window);
 
-struct Texture
-{
-    GLuint handle = 0;
-    ImVec2 size{0, 0};
-};
-
 Texture load_texture(const std::string& path);
 void destroy_texture(Texture& texture);
 
-struct RenderData
-{
-    Texture texture;
-};
-
-void render(const RenderData& render_data);
+void render(const RenderData& render_data, VraData& vra_data, bool buttons = true);
