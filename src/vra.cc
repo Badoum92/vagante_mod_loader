@@ -101,7 +101,7 @@ static void unpack_data(const std::filesystem::path& dst, const std::string& dat
 
         if (i % 100 == 0)
         {
-            g_vra_data.progress = static_cast<float>(i) / nb_files;
+            g_vra_data.progress = static_cast<float>(i + 1) / nb_files;
             render(g_render_data, g_vra_data, false);
         }
     }
@@ -175,7 +175,7 @@ void pack_dir(const std::filesystem::path& src, const std::filesystem::path& dst
 
         if (i % 100 == 0)
         {
-            g_vra_data.progress = static_cast<float>(i) / (nb_files * 2);
+            g_vra_data.progress = static_cast<float>(i + 1) / (nb_files * 2);
             render(g_render_data, g_vra_data, false);
         }
     }
@@ -220,7 +220,7 @@ void load_mods(const std::filesystem::path& vra)
                                       | std::filesystem::copy_options::overwrite_existing);
         }
 
-        g_vra_data.progress = static_cast<float>(i) / g_vra_data.mods.size();
+        g_vra_data.progress = static_cast<float>(i + 1) / g_vra_data.mods.size();
     }
     g_vra_data.progress = 1.0f;
     g_vra_data.log_buffer.appendf("Repacking...\n");

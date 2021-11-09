@@ -7,7 +7,11 @@ GLFWwindow* g_window = nullptr;
 RenderData g_render_data;
 VraData g_vra_data;
 
-int main(int, char**)
+#ifdef _WIN32
+int WinMain()
+#else
+int main()
+#endif
 {
     g_window = create_window();
 
