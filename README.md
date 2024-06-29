@@ -1,6 +1,6 @@
 # Vagante Mod Loader
 
-![Screenshot](https://cdn.discordapp.com/attachments/892059047145119765/907628396362760192/mod_loader.png)
+![Screenshot]([https://cdn.discordapp.com/attachments/892059047145119765/907628396362760192/mod_loader.png](https://cdn.discordapp.com/attachments/892059047145119765/907628396362760192/mod_loader.png?ex=6680ba10&is=667f6890&hm=afc68a5a65449a9e91b99aad5398f5ba164cb295c8d9f728901701c52b8a4929&))
 
 ## Download (Windows only)
 
